@@ -3,19 +3,60 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-color: #f7edd7;
+  /* --secondary-bg-color */
+  /* --nav-bg-color */
+  /* --nav-foreground-color */
+  --text-color: #000;
+  --foreground-color: #000;
+  --primary-color: #000;
+  --secondary-color: #000;
+  --mail-tile-hover-bg-color: rgb(0 0 0 / 0.1);
+  --mail-tile-border-color: rgb(0 0 0 / 0.1);
+  /* --mail-list-bg-color: */
+  --mail-list-border-color: rgb(0 0 0 / 0.2);
 }
 
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --primary-color: #00d1ff;
+    --secondary-color: #2a2e35;
+    --background-color: #1a1c20;
+  }
+} */
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
   }
 }
 
+@font-face {
+  font-family: "Satoshi";
+  src: url("./fonts/satoshi/Satoshi-Regular.woff2") format("woff2"),
+    url("./fonts/satoshi/Satoshi-Regular.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("./fonts/satoshi/Satoshi-Bold.woff2") format("woff2"),
+    url("./fonts/satoshi/Satoshi-Bold.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("./fonts/satoshi/Satoshi-Black.woff2") format("woff2"),
+    url("./fonts/satoshi/Satoshi-Black.woff") format("woff");
+  font-weight: 900;
+  font-style: normal;
+}
+
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Satoshi", sans-serif;
+  margin: 0;
+  padding: 0;
 }
