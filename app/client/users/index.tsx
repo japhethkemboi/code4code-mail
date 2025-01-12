@@ -2,7 +2,7 @@
 
 import { BiCopy } from "react-icons/bi";
 import { useAuth } from "../../auth/AuthProvider";
-import { useGlobalContext } from "../GlobalContext";
+import { useGlobalContext } from "../MailContext";
 import { copyToClipboard } from "@/app/utils";
 import { PiPlus } from "react-icons/pi";
 import { Button } from "@/app/components/button";

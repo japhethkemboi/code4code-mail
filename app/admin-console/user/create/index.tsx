@@ -1,11 +1,11 @@
-import { useGlobalContext } from "../../GlobalContext";
 import { useState } from "react";
 import { Header } from "../../components/header";
 import { Button, InputComponent } from "c4cui";
+import { useConsole } from "../../ConsoleContext";
 
 export const CreateUser = () => {
   const [password, setPassword] = useState("");
-  const { organization } = useGlobalContext();
+  const { organization } = useConsole();
 
   const handleAddMember = () => {};
 

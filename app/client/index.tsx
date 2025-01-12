@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { Route, Routes, useNavigate } from "react-router-dom";
-import { GlobalProvider } from "./GlobalContext";
+import { MailProvider } from "./MailContext";
 import Inbox from "./inbox";
 import Compose from "./compose";
 import Sent from "./sent";
@@ -18,7 +18,7 @@ export default function Client() {
   const navigate = useNavigate();
 
   return (
-    <GlobalProvider>
+    <MailProvider>
       <div className="flex w-screen h-screen min-h-screen bg-[var(--bg-color)] text-[var(--text-color)] overflow-hidden">
         <Nav
           header={{
@@ -51,9 +51,9 @@ export default function Client() {
             },
           ]}
           profile={{
-            username: profile?.first_name || "",
+            username: profile?.first_name || "Profile",
             onUsernameClick: () => navigate("/user/"),
-            avatar: `${process.env.NEXT_PUBLIC_SERVER_URL}${profile?.avatar}`,
+            avatar: profile?.avatar ? `${process.env.NEXT_PUBLIC_SERVER_URL}${profile?.avatar}` : undefined,
           }}
         />
         <Routes>
@@ -65,6 +65,6 @@ export default function Client() {
           <Route path="/drafts" element={<Drafts />} />
         </Routes>
       </div>
-    </GlobalProvider>
+    </MailProvider>
   );
 }

@@ -1,13 +1,10 @@
 "use client";
-
 import { BiCopy, BiCrown } from "react-icons/bi";
-import { useAuth } from "../../auth/AuthProvider";
-import { useGlobalContext } from "../GlobalContext";
 import { copyToClipboard } from "@/app/utils";
+import { useConsole } from "../ConsoleContext";
 
 export default function Organization() {
-  const { user } = useAuth();
-  const { organization } = useGlobalContext();
+  const { organization } = useConsole();
 
   return (
     <div className="flex flex-col gap-8 p-4 w-full">

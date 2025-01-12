@@ -1,8 +1,8 @@
 import { Header } from "../components/header";
-import { useGlobalContext } from "../GlobalContext";
+import { useConsole } from "../ConsoleContext";
 
 export default function Dashboard() {
-  const { organization } = useGlobalContext();
+  const { organization } = useConsole();
 
   return (
     <div className="flex flex-col gap-8 rounded-xl grow p-4 overflow-y-auto">

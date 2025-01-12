@@ -1,6 +1,6 @@
 export const fetchConfig = async (
   url: string,
-  options: RequestInit
+  options: RequestInit = {}
 ): Promise<{
   data?: any;
   error?: string;
@@ -8,25 +8,46 @@ export const fetchConfig = async (
 }> => {
   try {
     let newUrl = url;
+
     try {
       new URL(url);
-    } catch (error) {
+    } catch {
       newUrl = `${process.env.NEXT_PUBLIC_SERVER_URL}${url}`;
     }
-    const response = await fetch(newUrl, options);
-    const responseData = await response.json();
 
-    if (response.ok) {
-      return { data: responseData, status: response.status };
+    if (!options.method) {
+      options.method = "GET";
     }
 
-    return {
-      error: responseData?.error || responseData?.detail || responseData?.details || "An error occurred.",
-      status: response.status,
+    options.headers = {
+      ...options.headers,
+      "Content-Type": "application/json",
+      Accept: "application/json",
     };
-  } catch (error: any) {
+
+    const response = await fetch(newUrl, options);
+
+    try {
+      const responseData = await response.json();
+      if (response.ok) {
+        return { data: responseData, status: response.status };
+      }
+      return {
+        error: responseData?.error || responseData?.detail || responseData?.details || "An error occurred.",
+        status: response.status,
+      };
+    } catch {
+      if (response.ok) {
+        return { status: response.status };
+      }
+      return {
+        error: "An error occurred.",
+        status: response.status,
+      };
+    }
+  } catch {
     return {
-      error: error.message || "A network error occurred.",
+      error: "A network error occurred.",
       status: 0,
     };
   }

@@ -1,11 +1,38 @@
 import { Mail } from "@/app/interface";
-import { PiArchive, PiStar, PiTrash } from "react-icons/pi";
+import { PiArchive, PiStar, PiStarFill, PiTrash } from "react-icons/pi";
 import { useNavigate } from "react-router-dom";
 import { formatDateRegionally } from "../../utils";
 import { Button } from "c4cui";
+import { useMail } from "../../MailContext";
+import { toast } from "react-toastify";
 
 export const MailList = ({ mails }: { mails: Mail[] }) => {
   const navigate = useNavigate();
+  const { deleteMail, toggleArchive, toggleStar, getInbox, getSent, getDrafts } = useMail();
+
+  const handleToggleArchive = async (id: number, archived: boolean) => {
+    const res = await toggleArchive(id, archived);
+    if (res.ok) {
+      toast.success(res.message);
+      getInbox();
+      getSent();
+    } else {
+      toast.error(res.message);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    const res = await deleteMail(id);
+    if (res.ok) {
+      getInbox();
+      getSent();
+      getDrafts();
+      toast.success(res.message);
+    } else {
+      toast.error(res.message);
+    }
+  };
+
   return (
     <div className="h-full overflow-y-scroll bg-[var(--mail-list-bg-color)] rounded-xl border border-[var(--mail-list-border-color)] overflow-hidden w-full">
       <table>
@@ -25,9 +52,10 @@ export const MailList = ({ mails }: { mails: Mail[] }) => {
                   </div>
                 </td>
                 <td className="p-4" style={{ width: "60%" }}>
-                  <div className="flex flex-col gap-2">
-                    <p className="overflow-ellipsis line-clamp-2">{mail.body}</p>
-                  </div>
+                  <div
+                    className="overflow-ellipsis line-clamp-2"
+                    dangerouslySetInnerHTML={{ __html: mail.body || "" }}
+                  />
                 </td>
                 <td className="p-4" style={{ width: "10%" }}>
                   <div className="flex flex-col gap-2">
@@ -42,9 +70,22 @@ export const MailList = ({ mails }: { mails: Mail[] }) => {
                 </td>
                 <td className="p-4" style={{ width: "10%" }}>
                   <div className="flex gap-2 items-center">
-                    <Button className="p-2 border-none" outline={true} icon={<PiStar size={18} />} />
-                    <Button className="p-2 border-none" outline={true} icon={<PiTrash size={18} />} />
-                    <Button className="p-2 border-none" outline={true} icon={<PiArchive size={18} />} />
+                    {!mail.is_draft && (
+                      <>
+                        <Button
+                          onClick={() => mail.id && handleToggleArchive(mail.id, mail.archived || false)}
+                          className="p-2 border-none"
+                          outline={true}
+                          icon={<PiArchive size={18} />}
+                        />
+                      </>
+                    )}
+                    <Button
+                      onClick={() => mail.id && handleDelete(mail.id)}
+                      className="p-2 border-none"
+                      outline={true}
+                      icon={<PiTrash size={18} />}
+                    />
                   </div>
                 </td>
               </tr>

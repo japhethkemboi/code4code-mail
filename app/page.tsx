@@ -7,6 +7,9 @@ import Login from "./auth/login";
 import { Signup } from "./auth/signup";
 import AdminConsole from "./admin-console";
 import Client from "./client";
+import { NavProvider } from "c4cui";
+import CreateOrganization from "./admin-console/organization/create";
+import { ConsoleProvider } from "./admin-console/ConsoleContext";
 
 export default function App() {
   const [render, setRender] = useState(false);
@@ -32,8 +35,22 @@ const Home = () => {
       <Routes>
         {access ? (
           <>
-            <Route path="/console/*" element={<AdminConsole />} />
-            <Route path="/mail/*" element={<Client />} />
+            <Route
+              path="/console/*"
+              element={
+                <NavProvider>
+                  <AdminConsole />
+                </NavProvider>
+              }
+            />
+            <Route
+              path="/mail/*"
+              element={
+                <NavProvider>
+                  <Client />
+                </NavProvider>
+              }
+            />
           </>
         ) : (
           <>
@@ -42,6 +59,14 @@ const Home = () => {
             <Route path="*" element={<Navigate to="/login" />} />
           </>
         )}
+        <Route
+          path="/organization/create/:step?"
+          element={
+            <ConsoleProvider>
+              <CreateOrganization />
+            </ConsoleProvider>
+          }
+        />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <ToastContainer />

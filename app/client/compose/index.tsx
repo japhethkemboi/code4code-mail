@@ -1,12 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
 import { BiPlus } from "react-icons/bi";
-import { createMail, deleteMail, getContacts, getMail } from "../utils";
 import { Contact, Mail } from "@/app/interface";
 import { CgClose } from "react-icons/cg";
 import { toast } from "react-toastify";
 import { useNavigate, useParams } from "react-router-dom";
-import { Button, Header, InputComponent } from "c4cui";
+import "react-quill-new/dist/quill.snow.css";
+import { Button, Header, InputComponent, RichTextEditor } from "c4cui";
+import { useMail } from "../MailContext";
 
 export default function Compose() {
   const { id } = useParams();
@@ -30,6 +31,7 @@ export default function Compose() {
   const [drafting, setDrafting] = useState(false);
   const [fetching, setFetching] = useState(false);
   const navigate = useNavigate();
+  const { createMail, deleteMail, getContacts, getMail } = useMail();
 
   useEffect(() => {
     if (id) {
@@ -44,28 +46,24 @@ export default function Compose() {
   }, [draft]);
 
   const autoSaveDraft = async () => {
-    const accessToken = localStorage.getItem("access");
-    if (!drafting && accessToken && JSON.stringify(draft) !== JSON.stringify(savedDraft)) {
+    if (!drafting && JSON.stringify(draft) !== JSON.stringify(savedDraft)) {
       setDrafting(true);
       if ((draft.recipients && draft.recipients.length > 0) || draft.subject?.trim() || draft.body?.trim()) {
-        const res = await createMail(
-          {
-            id: draft.id || (id && parseInt(atob(id))) || undefined,
-            recipients: draft.recipients,
-            cc: draft.cc,
-            bcc: draft.bcc,
-            subject: draft.subject?.trim(),
-            body: draft.body?.trim(),
-            is_draft: true,
-          },
-          accessToken
-        );
+        const res = await createMail({
+          id: draft.id || (id && parseInt(atob(id))) || undefined,
+          recipients: draft.recipients,
+          cc: draft.cc,
+          bcc: draft.bcc,
+          subject: draft.subject?.trim(),
+          body: draft.body?.trim(),
+          is_draft: true,
+        });
         if (res.mail) {
           setDraft({ ...draft, id: res.mail.id });
           setSavedDraft({ ...draft, id: res.mail.id });
         }
       } else if (draft.id) {
-        const res = await deleteMail(draft.id, accessToken);
+        const res = await deleteMail(draft.id);
         if (res.ok) {
           setDraft({
             recipients: [],
@@ -88,9 +86,8 @@ export default function Compose() {
   };
 
   const handleInputChange = async (query: string, setSuggestions: (contacts: Contact[]) => void) => {
-    const accessToken = localStorage.getItem("access");
-    if (query.trim() && accessToken) {
-      const res = await getContacts(accessToken, query);
+    if (query.trim()) {
+      const res = await getContacts(query);
       if (res.contacts) {
         setSuggestions(res.contacts);
       }
@@ -100,17 +97,15 @@ export default function Compose() {
   };
 
   const handleGetDraftMail = async (id: number) => {
-    const accessToken = localStorage.getItem("access");
-    if (accessToken) {
-      const res = await getMail(id, accessToken);
-      if (res.mail) {
-        setDraft(res.mail);
-        setSavedDraft(res.mail);
-      } else if (res.error === "404") {
-        navigate("/mail/compose");
-      } else {
-        toast.error(res.error || "Failed to fetch draft. Please try again.");
-      }
+    setFetching(true);
+    const res = await getMail(id);
+    if (res.mail) {
+      setDraft(res.mail);
+      setSavedDraft(res.mail);
+    } else if (res.error === "404") {
+      navigate("/mail/compose");
+    } else {
+      toast.error(res.error || "Failed to fetch draft. Please try again.");
     }
     setFetching(false);
   };
@@ -150,24 +145,20 @@ export default function Compose() {
     if (recipientsQuery) await handleAddContact(recipientsQuery, "recipients");
     if (ccQuery) await handleAddContact(ccQuery, "cc");
     if (bccQuery) await handleAddContact(bccQuery, "bcc");
-    const accessToken = localStorage.getItem("access");
 
     if (!draft.recipients) {
       toast.error("Enter atleast one recipient.");
     } else if (!draft.body?.trim()) {
       toast.error("Write a message.");
-    } else if (accessToken) {
-      const res = await createMail(
-        {
-          id: draft.id || (id && parseInt(atob(id))) || undefined,
-          recipients: draft.recipients,
-          cc: draft.cc,
-          bcc: draft.bcc,
-          subject: draft.subject,
-          body: draft.body,
-        },
-        accessToken
-      );
+    } else {
+      const res = await createMail({
+        id: draft.id || (id && parseInt(atob(id))) || undefined,
+        recipients: draft.recipients,
+        cc: draft.cc,
+        bcc: draft.bcc,
+        subject: draft.subject,
+        body: draft.body,
+      });
       if (res.mail) {
         setDraft({
           recipients: [],
@@ -214,7 +205,7 @@ export default function Compose() {
               type="email"
               placeholder="Recipients"
               inputClasses="rounded-xl"
-              value={recipientsQuery}
+              value={recipientsQuery.toLocaleLowerCase().trim()}
               onChange={(query) => {
                 setRecipientsQuery(query);
                 handleInputChange(query, setRecipientsSuggestions);
@@ -228,7 +219,7 @@ export default function Compose() {
                 setRecipientsQuery("");
               }}
               onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === ",") {
+                if (e.key === "Enter" || e.key === "," || e.key === " ") {
                   e.preventDefault();
                   handleAddContact(recipientsQuery, "recipients");
                 }
@@ -275,7 +266,7 @@ export default function Compose() {
                 type="email"
                 placeholder="CC"
                 inputClasses="rounded-xl"
-                value={ccQuery}
+                value={ccQuery.toLocaleLowerCase().trim()}
                 onChange={(query) => {
                   setCcQuery(query);
                   handleInputChange(query, setCcSuggestions);
@@ -289,7 +280,7 @@ export default function Compose() {
                   setCcQuery("");
                 }}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === ",") {
+                  if (e.key === "Enter" || e.key === "," || e.key === " ") {
                     e.preventDefault();
                     handleAddContact(ccQuery, "cc");
                   }
@@ -330,7 +321,7 @@ export default function Compose() {
               <InputComponent
                 type="email"
                 placeholder="BCC"
-                value={bccQuery}
+                value={bccQuery.toLocaleLowerCase().trim()}
                 inputClasses="rounded-xl"
                 onChange={(query) => {
                   setBccQuery(query);
@@ -345,7 +336,7 @@ export default function Compose() {
                   setBccQuery("");
                 }}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === ",") {
+                  if (e.key === "Enter" || e.key === "," || e.key === " ") {
                     e.preventDefault();
                     handleAddContact(bccQuery, "bcc");
                   }
@@ -373,14 +364,7 @@ export default function Compose() {
           value={draft.subject}
           onChange={(e) => setDraft({ ...draft, subject: e })}
         />
-        <InputComponent
-          type="textarea"
-          placeholder="Compose message"
-          rows={10}
-          inputClasses="rounded-xl"
-          value={draft.body}
-          onChange={(e) => setDraft({ ...draft, body: e })}
-        />
+        <RichTextEditor value={draft.body || ""} onChange={(value) => setDraft({ ...draft, body: value })} />
         <Button disabled={sending} onClick={handleSend} label="Send" className="ml-auto" />
       </div>
     </div>

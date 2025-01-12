@@ -1,6 +1,6 @@
 import { toast } from "react-toastify";
 import { useAuth } from "../AuthProvider";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, To, useNavigate, useParams } from "react-router-dom";
 import { Button, InputComponent } from "c4cui";
 

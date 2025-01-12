@@ -1,11 +1,11 @@
-export interface User {
+export interface Profile {
   username: string;
   first_name: string;
   last_name?: string;
   phone_number?: string;
   avatar?: string;
   role?: string;
-  organization?: number;
+  organization?: Partial<Organization>;
 }
 
 export interface Service {
@@ -21,7 +21,7 @@ export interface Blog {
   slug: string;
   thumbnail: string;
   content: string;
-  author: Partial<User>;
+  author: Partial<Profile>;
   created_at?: string;
   updated_at?: string;
   tags?: string[];
@@ -32,7 +32,7 @@ export interface Organization {
   id?: number;
   name: string;
   domains: Partial<Domain>[];
-  owner?: User;
+  owner?: Partial<Profile>;
   organization_type: string;
 }
 
@@ -40,7 +40,7 @@ export interface Domain {
   name: string;
   verification_token?: string;
   is_verified?: boolean;
-  verified_by?: Partial<User>;
+  verified_by?: Partial<Profile>;
   verification_date?: string;
   mxrecord?: string;
   disclaimer?: string;
@@ -69,7 +69,7 @@ export const organizationTypes = [
 
 export interface Mail {
   id?: number;
-  sender?: string;
+  sender?: Partial<Profile>;
   recipients?: string[];
   cc?: string[];
   bcc?: string[];
@@ -80,11 +80,28 @@ export interface Mail {
   sent_at?: string;
   created_at?: string;
   edited?: boolean;
+  reply_to?: number;
+  in_reply_to?: number;
+  starred?: boolean;
+  archived?: boolean;
+  references?: string;
+}
+
+export interface Reply {
+  id: number;
+  mail: number;
+  parent_reply: number;
+  sender: Partial<Profile>;
+  body: string;
+  created_at: string;
+  updated_at: string;
+  starred: boolean;
+  is_read: boolean;
 }
 
 export interface Contact {
   id?: number;
   name: string;
   email: string;
-  user: Partial<User>;
+  Profile: Partial<Profile>;
 }

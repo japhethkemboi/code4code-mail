@@ -1,51 +1,47 @@
 "use client";
 import React from "react";
-import { Route, Routes, useLocation } from "react-router-dom";
+import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import Dashboard from "./dashboard";
-import { GlobalProvider } from "./GlobalContext";
+import { ConsoleProvider } from "./ConsoleContext";
 import Organization from "./organization";
-import Users from "./users";
-import { CreateUser } from "./users/create";
+import { CreateUser } from "./user/create";
 import { Nav } from "c4cui";
-import { MdOutlineSpaceDashboard, MdSpaceDashboard } from "react-icons/md";
-import { PiBuildingOffice, PiUsers } from "react-icons/pi";
+import { MdOutlineSpaceDashboard } from "react-icons/md";
+import { PiBuildingOffice } from "react-icons/pi";
+import { useAuth } from "../auth/AuthProvider";
+import Users from "./user";
 
 export default function AdminConsole() {
+  const { profile } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   return (
-    <GlobalProvider>
+    <ConsoleProvider>
       <div className="flex w-screen h-screen min-h-screen bg-[var(--bg-color)] text-[var(--text-color)] overflow-hidden">
         <Nav
+          header={{
+            title: "ADMIN CONSOLE",
+          }}
           items={[
             {
-              label: "ADMIN CONSOLE",
-              active: true,
-            },
-            {
               label: "Dashboard",
-              active: location.pathname === "/console/",
-              link: "/console/",
-              icon:
-                location.pathname === "/console/" ? (
-                  <MdSpaceDashboard size={18} />
-                ) : (
-                  <MdOutlineSpaceDashboard size={18} />
-                ),
+              active: location.pathname === "/console/" || location.pathname === "/console",
+              onClick: () => navigate("/console/"),
+              icon: <MdOutlineSpaceDashboard size={18} />,
             },
             {
-              active: location.pathname.includes("/console/organization/user"),
-              link: "/console/organization/users/",
-              icon: <PiUsers size={18} />,
-              label: "Users",
-            },
-            {
-              active: location.pathname.includes("/console/organization") && !location.pathname.includes("user"),
-              link: "/console/organization/",
-              icon: <PiBuildingOffice size={18} />,
               label: "Organization",
+              active: location.pathname.startsWith("/console/organization") && !location.pathname.includes("user"),
+              onClick: () => navigate("/console/organization/"),
+              icon: <PiBuildingOffice size={18} />,
             },
           ]}
+          profile={{
+            username: profile?.first_name || "Profile",
+            onUsernameClick: () => navigate("/user/"),
+            avatar: profile?.avatar ? `${process.env.NEXT_PUBLIC_SERVER_URL}${profile?.avatar}` : undefined,
+          }}
         />
         <Routes>
           <Route path="/" element={<Dashboard />} />
@@ -54,6 +50,6 @@ export default function AdminConsole() {
           <Route path="/organization/user/add/" element={<CreateUser />} />
         </Routes>
       </div>
-    </GlobalProvider>
+    </ConsoleProvider>
   );
 }

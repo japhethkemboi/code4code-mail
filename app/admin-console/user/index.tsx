@@ -2,15 +2,17 @@
 
 import { BiCopy } from "react-icons/bi";
 import { useAuth } from "../../auth/AuthProvider";
-import { useGlobalContext } from "../GlobalContext";
 import { copyToClipboard } from "@/app/utils";
 import { PiPlus } from "react-icons/pi";
 import { Header } from "../components/header";
 import { Button } from "c4cui";
+import { useConsole } from "../ConsoleContext";
+import { useNavigate } from "react-router-dom";
 
 export default function Users() {
-  const { user } = useAuth();
-  const { organization, organizationMembers } = useGlobalContext();
+  const { profile } = useAuth();
+  const navigate = useNavigate();
+  const { organization, organizationMembers } = useConsole();
 
   return (
     <div className="flex flex-col gap-8 w-full bg-[var(--secondary-bg-color)] p-4 overflow-y-auto">
@@ -18,7 +20,7 @@ export default function Users() {
         <Button
           className="px-4 p-2 rounded-full"
           outline={true}
-          link="/console/organization/user/add/"
+          onClick={() => navigate("/console/organization/user/add/")}
           icon={<PiPlus size={18} />}
           label="Add user"
         />

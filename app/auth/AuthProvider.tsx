@@ -1,23 +1,23 @@
 import React, { createContext, ReactNode, useContext, useEffect, useState } from "react";
-import { User } from "../interface";
+import { Profile } from "../interface";
 import { toast } from "react-toastify";
 import { fetchConfig } from "../fetchConfig";
 
 type AuthContextType = {
   access: string | null;
   refresh: string | null;
-  profile: Partial<User> | null;
+  profile: Partial<Profile> | null;
   login: (credentials: { username: string; password: string }) => Promise<{
     ok?: boolean;
     error?: string;
   }>;
-  signup: (user: User) => Promise<{ ok?: boolean; error?: string }>;
+  signup: (user: Profile) => Promise<{ profile?: Profile; error?: string }>;
   refreshAccessToken: () => void;
   fetchProfile: () => void;
   logout: () => void;
   authFetch: (
     url: string,
-    options: RequestInit
+    options?: RequestInit
   ) => Promise<{
     data?: any;
     error?: string;
@@ -30,14 +30,14 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [access, setAccess] = useState<string | null>(localStorage.getItem("access"));
   const [refresh, setRefresh] = useState<string | null>(localStorage.getItem("refresh"));
-  const [profile, setProfile] = useState<Partial<User> | null>(null);
+  const [profile, setProfile] = useState<Partial<Profile> | null>(null);
   let refreshPromise: Promise<string | false> | null = null;
 
   useEffect(() => {
     if (access) {
       fetchProfile();
     }
-  }, [access]);
+  }, []);
 
   const updateTokens = (newAccess: string, newRefresh: string) => {
     localStorage.setItem("access", newAccess);
@@ -47,12 +47,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const fetchProfile = async () => {
-    const res = await fetchConfig("/user/manage/", {
+    const res = await authFetch("/user/manage/", {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${access}`,
-      },
     });
 
     if (res.data) {
@@ -62,7 +58,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const signup = async (user: User): Promise<{ ok?: boolean; error?: string }> => {
+  const signup = async (user: Profile): Promise<{ profile?: Profile; error?: string }> => {
     const res = await fetchConfig("/user/create/", {
       method: "POST",
       headers: {
@@ -72,7 +68,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     if (res.data) {
-      return { ok: true };
+      return { profile: res.data };
     } else {
       return { error: res.error || "Couldn't sign you up. Try again." };
     }
@@ -102,12 +98,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = async () => {
-    const res = await authFetch("/user/logout/", {
-      method: "POST",
-    });
-
-    if (res.error && res.status !== 401) {
-      toast.error(res.error || "Logout failed. Please try again.");
+    if (access) {
+      const res = await fetchConfig("/user/logout/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${access}`,
+        },
+      });
+      if (res.error && res.status !== 401) {
+        toast.error(res.error || "Logout failed. Please try again.");
+      } else {
+        localStorage.clear();
+        setAccess(null);
+        setRefresh(null);
+        setProfile(null);
+      }
     } else {
       localStorage.clear();
       setAccess(null);
@@ -129,7 +135,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           updateTokens(res.data.access, res.data.refresh);
           resolve(res.data.access);
         } else {
-          logout();
           resolve(false);
         }
       });
@@ -139,12 +144,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const authFetch = async (
     url: string,
-    options: RequestInit
+    options?: RequestInit
   ): Promise<{ data?: any; error?: string; status: number }> => {
     const res = await fetchConfig(url, {
       ...options,
       headers: {
-        ...options.headers,
+        ...options?.headers,
+        "Content-Type": "application/json",
         Authorization: `Bearer ${access}`,
       },
     });
@@ -161,20 +167,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           ...options,
           headers: {
             ...options?.headers,
+            "Content-Type": "application/json",
             Authorization: `Bearer ${newAccess}`,
           },
         });
         if (newRes.status === 401) {
           logout();
+          return { error: "Your session has expired. Please log in again.", status: 401 };
         } else {
           return newRes;
         }
       } else {
-        return { error: "Your session has expired. Please log in again.", status: 401 };
+        return { error: "Something went wrong please try again.", status: 0 };
       }
+    } else {
+      return res;
     }
-
-    return res;
   };
 
   return (

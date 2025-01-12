@@ -1,13 +1,13 @@
 import { useEffect } from "react";
-import { useGlobalContext } from "../GlobalContext";
+import { useMail } from "../MailContext";
 import { MailList } from "../inbox/components/mail_list";
 import { Header } from "c4cui";
 
 export default function Drafts() {
-  const { drafts, handleGetDrafts } = useGlobalContext();
+  const { drafts, getDrafts } = useMail();
 
   useEffect(() => {
-    handleGetDrafts();
+    getDrafts();
   }, []);
 
   return (
