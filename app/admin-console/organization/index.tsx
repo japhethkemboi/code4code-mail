@@ -7,12 +7,12 @@ export default function Organization() {
   const { organization } = useConsole();
 
   return (
-    <div className="flex flex-col gap-8 p-4 w-full">
+    <div className="flex flex-col gap-8 p-4 w-full h-full overflow-y-auto">
       <div className="flex justify-between p-4 rounded-xl border border-black/20 w-full">
         <h2 className="text-lg">Organization</h2>
       </div>
       <div className="flex gap-4">
-        <div className="flex size-24 items-center justify-center text-5xl font-extralight p-4 rounded-xl bg-teal-400"></div>
+        <div className="flex size-24 items-center justify-center text-5xl font-extralight p-4 rounded-xl bg-[var(--primary-color)]"></div>
         <div className="flex flex-col gap-2 justify-center">
           <h2 className="text-lg">{organization?.name}</h2>
           {organization?.domains.map((domain) => (
@@ -29,7 +29,7 @@ export default function Organization() {
       </div>
       <h2 className="text-lg">Owner</h2>
       <div className="flex gap-4">
-        <div className="flex size-20 items-center justify-center text-5xl font-extralight p-4 rounded-full bg-teal-400"></div>
+        <div className="flex size-20 items-center justify-center text-5xl font-extralight p-4 rounded-full  bg-[var(--primary-color)]"></div>
         <div className="flex flex-col gap-2 justify-center">
           <p className="text-lg">{organization?.owner?.first_name + " " + organization?.owner?.last_name}</p>
           <p

@@ -11,7 +11,14 @@ type AuthContextType = {
     ok?: boolean;
     error?: string;
   }>;
-  signup: (user: Profile) => Promise<{ profile?: Profile; error?: string }>;
+  signup: (user: {
+    username: string;
+    first_name: string;
+    last_name?: string;
+    password: string;
+    phone_number?: string;
+    organization?: number;
+  }) => Promise<{ profile?: Profile; error?: string }>;
   refreshAccessToken: () => void;
   fetchProfile: () => void;
   logout: () => void;
@@ -58,7 +65,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const signup = async (user: Profile): Promise<{ profile?: Profile; error?: string }> => {
+  const signup = async (user: {
+    username: string;
+    first_name: string;
+    last_name?: string;
+    password: string;
+    phone_number?: string;
+    organization?: number;
+  }): Promise<{ profile?: Profile; error?: string }> => {
     const res = await fetchConfig("/user/create/", {
       method: "POST",
       headers: {

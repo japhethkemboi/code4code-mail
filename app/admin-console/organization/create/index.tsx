@@ -6,6 +6,7 @@ import { useAuth } from "@/app/auth/AuthProvider";
 import { useConsole } from "../../ConsoleContext";
 import { Button, InputComponent } from "c4cui";
 import { DomainVerify } from "../../domain/verify";
+import { UserForm } from "../../user/create/UserForm";
 
 export default function CreateOrganization() {
   const { step } = useParams();
@@ -98,7 +99,7 @@ export default function CreateOrganization() {
     }
   };
 
-  const handleCreateAccount = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleAddUser = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const formObj: Record<string, string> = {};
@@ -117,10 +118,11 @@ export default function CreateOrganization() {
       toast.error("Password should be atleast 8 characters long.");
     } else {
       const res = await signup({
-        ...formObj,
+        first_name: formObj["first_name"],
         username: `${formObj["username"]}@${newOrganization?.domains[0].name}`,
-        organization: newOrganization?.id?.toString(),
-      } as Profile);
+        organization: newOrganization?.id,
+        password: formObj["password"],
+      });
       if (res.profile) {
         toast.success("Account created successfully.");
         const loginRes = await login({
@@ -141,7 +143,7 @@ export default function CreateOrganization() {
   };
 
   return (
-    <div className="flex flex-col gap-8 items-center justify-center w-screen h-screen overflow-y-scroll">
+    <div className="flex items-center justify-center w-screen h-screen overflow-y-auto overflow-hidden pb-4">
       {!step || step === "0" ? (
         <form onSubmit={handleCreateOrganization} className="flex flex-col gap-8 max-w-4xl w-full self-center p-4">
           <h2 className="text-xl sm:text-2xl md:text-3xl">Organization</h2>
@@ -183,7 +185,7 @@ export default function CreateOrganization() {
         />
       )}
       {step === "2" && (
-        <form onSubmit={handleCreateAccount} className="flex flex-col gap-8 max-w-4xl self-center p-4">
+        <div className="flex flex-col h-full gap-8 max-w-4xl self-center p-4">
           <h2 className="text-xl sm:text-2xl md:text-3xl">Create primary email</h2>
           <p>
             This email will serve as the core account for managing all your domain users and settings. It will be the
@@ -202,30 +204,8 @@ export default function CreateOrganization() {
             This email will be used for administrative tasks and will act as the gateway for managing your
             organization's domain settings.
           </p>
-          <div className="flex gap-2">
-            <InputComponent placeholder="First Name" name="first_name" />
-            <InputComponent placeholder="Last Name" name="last_name" />
-          </div>
-          <div className="flex flex-col gap-2">
-            <div className="flex gap-2 items-end">
-              <InputComponent type="username" name="username" placeholder="Username" />
-              <p className="flex w-full">@{newOrganization?.domains[0]?.name || ""}</p>
-            </div>
-            <p className="opacity-70 text-xs md:text-sm">
-              Your username will be paired with your domain (e.g., username@code4code.dev) to create your organization
-              email.
-            </p>
-          </div>
-          <InputComponent
-            generatePassword={true}
-            copyPassword={true}
-            name="password"
-            placeholder="Password"
-            minLength={8}
-            type="password"
-          />
-          <Button type="submit" label="Create account" className="ml-auto" />
-        </form>
+          <UserForm domains={newOrganization.domains} handleSubmit={handleAddUser} />
+        </div>
       )}
       {step === "3" && complete && (
         <div className="flex flex-col gap-8 max-w-4xl self-center p-4">

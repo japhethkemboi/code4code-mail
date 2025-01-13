@@ -7,9 +7,10 @@ import Organization from "./organization";
 import { CreateUser } from "./user/create";
 import { Nav } from "c4cui";
 import { MdOutlineSpaceDashboard } from "react-icons/md";
-import { PiBuildingOffice } from "react-icons/pi";
+import { PiBuildingOffice, PiLink, PiUsers } from "react-icons/pi";
 import { useAuth } from "../auth/AuthProvider";
 import Users from "./user";
+import Domains from "./domain";
 
 export default function AdminConsole() {
   const { profile } = useAuth();
@@ -32,9 +33,21 @@ export default function AdminConsole() {
             },
             {
               label: "Organization",
-              active: location.pathname.startsWith("/console/organization") && !location.pathname.includes("user"),
+              active: location.pathname.startsWith("/console/organization"),
               onClick: () => navigate("/console/organization/"),
               icon: <PiBuildingOffice size={18} />,
+            },
+            {
+              label: "Users",
+              active: location.pathname.startsWith("/console/users"),
+              onClick: () => navigate("/console/users/"),
+              icon: <PiUsers size={18} />,
+            },
+            {
+              label: "Domains",
+              active: location.pathname.startsWith("/console/domains"),
+              onClick: () => navigate("/console/domains/"),
+              icon: <PiLink size={18} />,
             },
           ]}
           profile={{
@@ -46,8 +59,9 @@ export default function AdminConsole() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/organization/" element={<Organization />} />
-          <Route path="/organization/users/" element={<Users />} />
-          <Route path="/organization/user/add/" element={<CreateUser />} />
+          <Route path="/domains/" element={<Domains />} />
+          <Route path="/users/" element={<Users />} />
+          <Route path="/users/add/" element={<CreateUser />} />
         </Routes>
       </div>
     </ConsoleProvider>

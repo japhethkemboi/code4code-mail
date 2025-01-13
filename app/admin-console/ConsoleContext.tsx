@@ -6,9 +6,7 @@ import { fetchConfig } from "../fetchConfig";
 
 interface ConsoleContextType {
   organization: Organization | null;
-  fetchOrganization: () => void;
-  organizationMembers: Partial<Profile>[] | null;
-  fetchOrganizationMembers: () => void;
+  users: Partial<Profile>[] | null;
   verifyDomain: (domain: string) => Promise<{ ok?: boolean; error?: string }>;
   createOrganization: (organization: Partial<Organization>) => Promise<{ organization?: Organization; error?: string }>;
   getOrganization: (id: number) => Promise<{ organization?: Organization; error?: string }>;
@@ -18,36 +16,32 @@ const ConsoleContext = createContext<ConsoleContextType | undefined>(undefined);
 
 // Provider component
 export const ConsoleProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { profile, authFetch } = useAuth();
+  const { authFetch, access } = useAuth();
   const [organization, setOrganization] = useState<Organization | null>(null);
-  const [organizationMembers, setOrganizationMembers] = useState<Partial<Profile>[] | null>(null);
+  const [users, setUsers] = useState<Partial<Profile>[] | null>(null);
 
   useEffect(() => {
     fetchOrganization();
-    fetchOrganizationMembers();
-  }, []);
+    fetchUsers();
+  }, [access]);
 
   const fetchOrganization = async (): Promise<void> => {
-    if (profile?.organization?.id) {
-      const res = await authFetch(`/organization/${profile.organization.id}/manage/`);
+    const res = await authFetch(`/organization/manage/`);
 
-      if (res.data) {
-        setOrganization(res.data);
-      } else {
-        toast.error(res.error || "Couln't fetch organization details.");
-      }
+    if (res.data) {
+      setOrganization(res.data);
+    } else {
+      toast.error(res.error || "Couln't fetch organization details.");
     }
   };
 
-  const fetchOrganizationMembers = async (): Promise<void> => {
-    if (organization?.id) {
-      const res = await getOrganizationMembers(organization.id);
+  const fetchUsers = async (): Promise<void> => {
+    const res = await authFetch(`/organization/users/`);
 
-      if (res.members) {
-        setOrganizationMembers(res.members);
-      } else {
-        toast.error(res.error || "Couln't fetch organization members.");
-      }
+    if (res.data) {
+      setUsers(res.data);
+    } else {
+      toast.error(res.error || "Couln't fetch organization members.");
     }
   };
 
@@ -60,11 +54,11 @@ export const ConsoleProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
-  const getOrganizationMembers = async (organization: number): Promise<{ members?: Profile[]; error?: string }> => {
-    const res = await authFetch(`/organization/${organization}/members/`);
+  const getUsers = async (organization: number): Promise<{ users?: Profile[]; error?: string }> => {
+    const res = await authFetch(`/organization/${organization}/users/`);
 
     if (res.data) {
-      return { members: res.data };
+      return { users: res.data };
     } else {
       return { error: res.error };
     }
@@ -100,9 +94,7 @@ export const ConsoleProvider: React.FC<{ children: React.ReactNode }> = ({ child
     <ConsoleContext.Provider
       value={{
         organization,
-        organizationMembers,
-        fetchOrganization,
-        fetchOrganizationMembers,
+        users,
         verifyDomain,
         getOrganization,
         createOrganization,

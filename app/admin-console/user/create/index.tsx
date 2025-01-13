@@ -1,59 +1,49 @@
 import { useState } from "react";
 import { Header } from "../../components/header";
-import { Button, InputComponent } from "c4cui";
 import { useConsole } from "../../ConsoleContext";
+import { useAuth } from "@/app/auth/AuthProvider";
+import { toast } from "react-toastify";
+import { UserForm } from "./UserForm";
 
 export const CreateUser = () => {
-  const [password, setPassword] = useState("");
+  const [newUser, setNewUser] = useState<{
+    username: string;
+    first_name: string;
+    last_name?: string;
+    password: string;
+    phone_number?: string;
+    organization?: number;
+  }>({
+    username: "",
+    first_name: "",
+    last_name: "",
+    phone_number: "",
+    password: "",
+  });
+  const { signup } = useAuth();
   const { organization } = useConsole();
 
-  const handleAddMember = () => {};
+  const handleAddUser = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const res = await signup({ ...newUser, organization: organization?.id });
+    if (res.profile) {
+      toast.success(`${res.profile.first_name} added to your organization.`);
+    } else {
+      toast.error(res.error || "Error while adding user.");
+    }
+  };
 
   return (
-    <div className="flex flex-col w-full gap-8 p-4 bg-[var(--secondary-bg-color)]">
-      <Header back={true} title="Add Member" />
-      <p>
-        This email will be used for administrative tasks and will act as the gateway for managing your organization's
-        domain settings.
-      </p>
-      <form onSubmit={handleAddMember} className="flex flex-col gap-8 max-w-4xl">
-        <div className="flex gap-2">
-          <InputComponent placeholder="First Name" name="first_name" />
-          <InputComponent placeholder="Last Name" name="last_name" />
-        </div>
-        <div className="flex flex-col gap-2">
-          <div className="flex gap-2 items-end">
-            <InputComponent type="username" name="username" placeholder="Username" />
-            <InputComponent
-              type="select"
-              name="domain"
-              options={organization?.domains.map((domain, index) => ({
-                id: domain.name || index.toString(),
-                value: "@" + domain.name,
-              }))}
-            />
-          </div>
-          <p className="opacity-70 text-sm md:text-base">
-            Your username will be paired with your domain (e.g., username@code4code.dev) to create your organization
-            email.
-          </p>
-        </div>
-        <InputComponent
-          value={password}
-          onChange={setPassword}
-          name="password"
-          placeholder="Password"
-          minLength={8}
-          type="password"
-          generatePassword={true}
-          copyPassword={true}
-        />
-        <div className="flex gap-2 items-center w-auto">
-          <input type="checkbox" />
-          <p className="flex w-full">Force member to change password when they login.</p>
-        </div>
-        <Button type="submit" label="Add Member" className="ml-auto" />
-      </form>
+    <div className="flex flex-col w-full h-full overflow-y-auto gap-8 p-4 bg-[var(--secondary-bg-color)]">
+      <Header back={true} title="Add User" />
+      <p>Users can use this email to get emails, verification codes and other mail related functions.</p>
+      <UserForm
+        handleSubmit={handleAddUser}
+        domains={organization?.domains || []}
+        user={newUser}
+        setUser={setNewUser}
+      />
     </div>
   );
 };
