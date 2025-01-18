@@ -1,5 +1,5 @@
 import React, { createContext, ReactNode, useContext, useEffect, useState } from "react";
-import { Profile } from "../interface";
+import { Profile } from "../../../mail/app/interface";
 import { toast } from "react-toastify";
 import { fetchConfig } from "../fetchConfig";
 
@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [access, setAccess] = useState<string | null>(localStorage.getItem("access"));
   const [refresh, setRefresh] = useState<string | null>(localStorage.getItem("refresh"));
   const [profile, setProfile] = useState<Partial<Profile> | null>(null);
-  let refreshPromise: Promise<string | false> | null = null;
+  let refreshPromise: Promise<{ access?: string; status?: number; error?: string }>;
 
   useEffect(() => {
     if (access) {
@@ -135,10 +135,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setProfile(null);
     }
   };
-
-  const refreshAccessToken = async (): Promise<string | false> => {
+  const refreshAccessToken = async (): Promise<{ access?: string; status?: number; error?: string }> => {
     if (!refreshPromise) {
-      refreshPromise = new Promise(async (resolve, reject) => {
+      refreshPromise = new Promise(async (resolve) => {
         const res = await fetchConfig("/user/token/refresh/", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -147,9 +146,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         if (res.data) {
           updateTokens(res.data.access, res.data.refresh);
-          resolve(res.data.access);
+          resolve({ access: res.data.access });
         } else {
-          resolve(false);
+          resolve({ error: res.error || "Something went wrong", status: res.status || 0 });
         }
       });
     }
@@ -169,33 +168,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       },
     });
 
-    if (res.status === 401) {
-      if (!refresh) {
-        logout();
-        return { error: "You are not logged in.", status: 401 };
-      }
-
-      const newAccess = await refreshAccessToken();
-      if (newAccess) {
-        const newRes = await fetchConfig(url, {
-          ...options,
-          headers: {
-            ...options?.headers,
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${newAccess}`,
-          },
-        });
-        if (newRes.status === 401) {
-          logout();
-          return { error: "Your session has expired. Please log in again.", status: 401 };
-        } else {
-          return newRes;
-        }
-      } else {
-        return { error: "Something went wrong please try again.", status: 0 };
-      }
-    } else {
+    if (res.status !== 401) {
       return res;
+    } else {
+      if (refresh) {
+        const newAccess = await refreshAccessToken();
+        if (newAccess.access) {
+          const newRes = await fetchConfig(url, {
+            ...options,
+            headers: {
+              ...options?.headers,
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${newAccess.access}`,
+            },
+          });
+          if (res.status !== 401) {
+            return newRes;
+          }
+        }
+      }
+      logout();
+      return { error: "Your session has expired. Please login.", status: res.status || 0 };
     }
   };
 

@@ -21,8 +21,10 @@ export const ConsoleProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [users, setUsers] = useState<Partial<Profile>[] | null>(null);
 
   useEffect(() => {
-    fetchOrganization();
-    fetchUsers();
+    if (access) {
+      fetchOrganization();
+      fetchUsers();
+    }
   }, [access]);
 
   const fetchOrganization = async (): Promise<void> => {

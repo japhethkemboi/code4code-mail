@@ -33,7 +33,7 @@ export const fetchConfig = async (
         return { data: responseData, status: response.status };
       }
       return {
-        error: responseData?.error || responseData?.detail || responseData?.details || "An error occurred.",
+        error: responseData?.error || responseData?.detail || responseData?.details[0] || "An error occurred.",
         status: response.status,
       };
     } catch {
